@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="2pas.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bls.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="bls_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ecdsa.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ecdsa_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ecn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ecn4.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="miracl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mirdef.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="paillier.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="paillier_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pairing_3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zzn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zzn2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zzn4.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zzn8.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zzn24.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="big.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="2pas_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ovts.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ovts_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="2pas.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="big.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bls.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bls_pair.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="bls_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="common.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ecdsa.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ecdsa_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ecn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ecn4.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="paillier.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="paillier_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zzn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zzn2.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zzn4.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zzn8.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="zzn24.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="2pas_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ovts.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ovts_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="miracl.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="miracl.pdb" />
+  </ItemGroup>
+</Project>
