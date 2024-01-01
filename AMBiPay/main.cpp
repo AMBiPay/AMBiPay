@@ -12,5 +12,6 @@ int main()
 	schnorr2Sign_test();
 	CommitProve_test();
 	ecdsa2Sign_test();
+	ecdsa2Sign_test_1();
 	
 }

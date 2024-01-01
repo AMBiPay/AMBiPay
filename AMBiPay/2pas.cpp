@@ -358,11 +358,11 @@ Input: sysPara: public system parameter
 	   
 Return:  psig: the final pre-signature
 ************************************/
-void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn P, Big y0, pSigma &psig)
+void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn K, ECn P, Big y0, pSigma &psig)
 {
 	Big invy0, invs, e, tmph, tmpr;
 	Big r0, z0, e0, tmpx, tmpy;
-	ECn K, tmpP, tmpK, R0;
+	ECn tmpP, tmpK, R0;
 
 
 	invy0 = inverse(y0, sysPara.n);
@@ -370,14 +370,6 @@ void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen,
 
 	invs = inverse(sigma.s, sysPara.n);
 	Hash(msg, e);  // hash value of message
-	
-	tmph = modmult(invs, e, sysPara.n);
-	tmpr = modmult(invs, sigma.r, sysPara.n);
-	K = sysPara.G;
-	K *= tmph;
-	tmpP = P;
-	tmpP *= tmpr;
-	K += tmpP;
 
 	tmpK.set(sigma.r, 1);
 	if (K == tmpK)
@@ -426,14 +418,11 @@ Input: sysPara: public system parameter
 
 Return:  psig: the final pre-signature
 ************************************/
-void pSignECDSAOffline(ecdsaSysPara sysPara, Big k0, ECn K1, ECn P, Big y0, pSigma &psig)
+void pSignECDSAOffline(ecdsaSysPara sysPara, ECn K, ECn P, Big y0, pSigma &psig)
 {
 	Big e, tmph, tmpr;
 	Big r0, tmpx, tmpy;
-	ECn K, R0;
-
-	K = K1;
-	K *= k0;
+	ECn R0;
 	
 	psig.Y0 = K;
 	psig.Y0 *= y0;
@@ -476,7 +465,6 @@ void pSignECDSAOnline(ecdsaSysPara sysPara, ecdsaSig sigma, Big y0, pSigma &psig
 	invy0 = inverse(y0, sysPara.n);
 	psig.ws = modmult(invy0, sigma.s, sysPara.n);
 	psig.r = sigma.r;
-
 }
 
 /************************************
@@ -497,7 +485,7 @@ int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma ps
 	Big invs, e, tmph, tmpr;
 
 	K.set(psig.r, psig.b);
-	
+
 	tmpR0 = K;
 	tmpR0 *= psig.z0;
 	tmpY0 = psig.Y0;
@@ -517,7 +505,7 @@ int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma ps
 	pfc.add_to_hash(tmpx);
 	pfc.add_to_hash(tmpy);
 
-	tmpe0 = pfc.finish_hash_to_group();	
+	tmpe0 = pfc.finish_hash_to_group();
 
 	if (tmpe0 != psig.e0)
 	{
@@ -558,6 +546,241 @@ void extECDSA(ecdsaSysPara sysPara, pSigma psig, ecdsaSig sig, Big &y0)
 
 	invs = inverse(psig.ws, sysPara.n);
 	y0 = modmult(sig.s, invs, sysPara.n);
+}
+
+
+void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn K, ECn P, Big y0, pSigma2 &psig)
+{
+	Big invy0, invs, e, tmph, tmpr;
+	Big r0, rs, e0, tmpx, tmpy;
+	ECn tmpP, tmpK, R0, Rg, Rk;
+	
+
+	psig.ws = y0 + sigma.s % sysPara.n;    //ws = y0 + s % n
+
+	invs = inverse(sigma.s, sysPara.n);
+	Hash(msg, e);  // hash value of message
+
+	tmph = modmult(invs, e, sysPara.n);
+	tmpr = modmult(invs, sigma.r, sysPara.n);
+	
+	tmpK.set(sigma.r, 1);
+	if (K == tmpK)
+	{
+		psig.b = 1;
+	}
+	else
+	{
+		psig.b = 0;
+	}
+
+	psig.r = sigma.r;
+
+	psig.Y0 = sysPara.G;
+	psig.Y0 *= y0;
+
+	psig.Zg = sysPara.G;
+	psig.Zg *= sigma.s;
+
+	r0 = rand(sysPara.n);
+	R0 = sysPara.G;
+	R0 *= r0;
+
+	rs = rand(sysPara.n);
+	Rg = sysPara.G;
+	Rg *= rs;
+	Rk = K;
+	Rk *= rs;
+
+	pfc.start_hash();
+	R0.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	Rg.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	Rk.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.Y0.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.Zg.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	K.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.e0 = pfc.finish_hash_to_group();
+
+	tmph = modmult(psig.e0, y0, sysPara.n);
+	psig.z0 = (r0 + sysPara.n - tmph) % sysPara.n;
+
+	tmph = modmult(psig.e0, sigma.s, sysPara.n);
+	psig.zs = (rs + sysPara.n - tmph) % sysPara.n;
+}
+
+void pSignECDSAOffline(ecdsaSysPara sysPara, ECn K, ECn P, Big y0, ECn &R0, ECn &Rg, ECn &Rk, Big &r0, Big &rs, pSigma2 &psig)
+{
+	Big e, tmph, tmpr;
+	Big tmpx, tmpy;
+
+	psig.Y0 = sysPara.G;
+	psig.Y0 *= y0;
+
+	r0 = rand(sysPara.n);
+	R0 = sysPara.G;
+	R0 *= r0;
+
+	rs = rand(sysPara.n);
+	Rg = sysPara.G;
+	Rg *= rs;
+	Rk = K;
+	Rk *= rs;	
+}
+
+/************************************
+Description: the online pre-signing algorithm of 2-party ECDSA adaptor signature scheme
+Input: sysPara: public system parameter
+	   simga: 2-party signature
+	   y0: witness of nizkDLPi type
+
+Return:  psig: the final pre-signature
+************************************/
+void pSignECDSAOnline(ecdsaSysPara sysPara, ECn R0, ECn Rg, ECn Rk, ECn K, ecdsaSig sigma, Big r0, Big rs, Big y0, pSigma2 &psig)
+{
+	Big invy0, tmpx, tmpy, tmph;
+
+	psig.ws = y0 + sigma.s % sysPara.n;    //ws = y0 + s % n	
+	psig.r = sigma.r;
+	psig.Zg = sysPara.G;
+	psig.Zg *= sigma.s;
+	pfc.start_hash();
+	R0.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	Rg.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	Rk.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.Y0.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.Zg.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	K.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.e0 = pfc.finish_hash_to_group();
+
+	tmph = modmult(psig.e0, y0, sysPara.n);
+	psig.z0 = (r0 + sysPara.n - tmph) % sysPara.n;
+
+	tmph = modmult(psig.e0, sigma.s, sysPara.n);
+	psig.zs = (rs + sysPara.n - tmph) % sysPara.n;
+
+}
+
+
+int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma2 psig)
+{
+	Big tmpe0, tmpx, tmpy;
+	ECn K, Zg, Zk, tmpR0, tmpRg, tmpRk, tmpY0, tmpZg, tmpZk, tmpP;
+	Big invs, e, tmph, tmpr, tmpee0, tmpre0;
+
+
+	Hash(msg, e);  // hash value of message
+	K.set(psig.r, psig.b);
+
+	tmpR0 = sysPara.G;
+	tmpR0 *= psig.z0;
+	tmpY0 = psig.Y0;
+	tmpY0 *= psig.e0;
+	tmpR0 += tmpY0;
+
+	tmpRg = sysPara.G;
+	tmpRg *= psig.zs;
+	tmpZg = psig.Zg;
+	tmpZg *= psig.e0;
+	tmpRg += tmpZg;
+
+	tmpee0 = modmult(e, psig.e0, sysPara.n);
+	tmpre0 = modmult(psig.r, psig.e0, sysPara.n);
+	tmpZk = sysPara.G;
+	tmpZk *= tmpee0;	
+	tmpP = P;
+	tmpP *= tmpre0;
+	tmpZk += tmpP;
+
+	tmpRk = K;
+	tmpRk *= psig.zs;	
+	tmpRk += tmpZk;
+
+	pfc.start_hash();
+	tmpR0.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	tmpRg.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	tmpRk.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.Y0.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	psig.Zg.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	K.getxy(tmpx, tmpy);
+	pfc.add_to_hash(tmpx);
+	pfc.add_to_hash(tmpy);
+
+	tmpe0 = pfc.finish_hash_to_group();
+
+	if (tmpe0 != psig.e0)
+	{
+		cout << "Invalid Pre-signature!" << endl;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+
+}
+
+
+void adaptECDSA(ecdsaSysPara sysPara, pSigma2 psig, Big y0, ecdsaSig &sig)
+{
+	sig.r = psig.r;
+	sig.s = (psig.ws - y0 + sysPara.n) % sysPara.n;
+}
+
+void extECDSA(ecdsaSysPara sysPara, pSigma2 psig, ecdsaSig sig, Big &y0)
+{
+
+	y0 = (psig.ws - sig.s) % sysPara.n;
 }
 
 void signSchnorr(ecdsaSysPara sysPara, ECn R, Big r, Big d, BYTE *msg, int msgByteLen, schnorrSig &sig)

@@ -41,6 +41,20 @@ typedef struct _PS_ECDSA_
 	int b;
 }pSigma;
 
+typedef struct _PS_ECDSA2_
+{
+	Big r;
+	Big ws;
+	ECn Y0;
+	ECn Zg;
+	Big e0;
+	Big z0;
+	Big zs;
+	int b;
+}pSigma2;
+
+
+
 typedef struct _SCHNORR_SYS_PARA_
 {
 	int la;
@@ -84,13 +98,21 @@ int P1Sign(ecdsaSysPara sysPara, Big cm0, nizkDLX st0, nizkDLPi pi0, Big d1, BYT
 int P1SignOffline(ecdsaSysPara sysPara, Big cm0, nizkDLX st0, nizkDLPi pi0, Big d1, nizkDLW wi1, paiPubKey pk0, Big d0cipher, Big &cpart, Big &cinvk);
 int P1SignOnline(ecdsaSysPara sysPara, nizkDLX st0, nizkDLPi pi0, BYTE *msg, int msgByteLen, paiPubKey pk0, Big cpart, Big  cinvk, Big &cipher);
 void P0Sign(ecdsaSysPara sysPara, nizkDLX st1, nizkDLW wi0, paiPriKey sk0, paiPubKey pk0, Big cipher, ecdsaSig &sigma);
-void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn P, Big y0, pSigma &psig);
-void pSignECDSAOffline(ecdsaSysPara sysPara, Big k0, ECn K1, ECn P, Big y0, pSigma &psig);
+void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn K, ECn P, Big y0, pSigma &psig);
+void pSignECDSAOffline(ecdsaSysPara sysPara, ECn K, ECn P, Big y0, pSigma &psig);
 void pSignECDSAOnline(ecdsaSysPara sysPara, ecdsaSig sigma, Big y0, pSigma &psig);
 
 int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma psig);
 void adaptECDSA(ecdsaSysPara sysPara, pSigma psig, Big y0, ecdsaSig &sig);
 void extECDSA(ecdsaSysPara sysPara, pSigma psig, ecdsaSig sig, Big &y0);
+
+void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn K, ECn P, Big y0, pSigma2 &psig);
+void pSignECDSAOffline(ecdsaSysPara sysPara, ECn K, ECn P, Big y0, ECn &R0, ECn &Rg, ECn &Rk, Big &r0, Big &rs, pSigma2 &psig);
+void pSignECDSAOnline(ecdsaSysPara sysPara, ECn R0, ECn Rg, ECn Rk, ECn K, ecdsaSig sigma, Big r0, Big rs, Big y0, pSigma2 &psig);
+int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma2 psig);
+void adaptECDSA(ecdsaSysPara sysPara, pSigma2 psig, Big y0, ecdsaSig &sig);
+void extECDSA(ecdsaSysPara sysPara, pSigma2 psig, ecdsaSig sig, Big &y0);
+
 
 void signSchnorr(ecdsaSysPara sysPara, ECn R, Big r, Big d, BYTE *msg, int msgByteLen, schnorrSig &sig);
 int verfSchnorr(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, schnorrSig sig);

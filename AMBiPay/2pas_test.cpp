@@ -68,7 +68,7 @@ void ecdsa2Sign_test()
 	LARGE_INTEGER start_t, stop_t;
 	double exe_time = 0;
 
-	int num = 100;
+	int num = 1000;
 
 	int secPara = 385;
 	paiPubKey pk0;
@@ -77,7 +77,7 @@ void ecdsa2Sign_test()
 	
 	Big p, a, b, xG, yG, n, BMod;
 	Big d, d0, d1;
-	ECn PK, PK0, PK1;
+	ECn PK, PK0, PK1, K;
 	ecdsaSysPara sysPara;
 	int la = 256;
 	int msgByteLen;
@@ -196,13 +196,15 @@ void ecdsa2Sign_test()
 	cout << "The performance of ecdsaVerf = " << exe_time / num << " ms" << endl;
 
 
+	K = st1.Y;
+	K *= wi0.w;
 	QueryPerformanceFrequency(&freq);// obtain clock frequency 
 	exe_time = 0;
 	for (int k = 0; k < num; k++)
 	{
 		QueryPerformanceCounter(&start_t);
 		y0 = rand(sysPara.n);
-		pSignECDSA(sysPara, sigma, msgBYTE, msgByteLen, PK, y0, psig);
+		pSignECDSA(sysPara, sigma, msgBYTE, msgByteLen, K, PK, y0, psig);
 		QueryPerformanceCounter(&stop_t);
 		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
 	}
@@ -219,7 +221,7 @@ void ecdsa2Sign_test()
 	{
 		QueryPerformanceCounter(&start_t);
 		y0 = rand(sysPara.n);
-		pSignECDSAOffline(sysPara, wi0.w, st1.Y, PK, y0, psig);
+		pSignECDSAOffline(sysPara, K, PK, y0, psig);
 		QueryPerformanceCounter(&stop_t);
 		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
 	}
@@ -364,6 +366,227 @@ void ecdsa2Sign_test()
 	*/
 }
 
+
+void ecdsa2Sign_test_1()
+{
+	Miracl precision(2050, 0);
+	miracl *mip = &precision;
+	LARGE_INTEGER freq;
+	LARGE_INTEGER start_t, stop_t;
+	double exe_time = 0;
+
+	int num = 1000;
+
+	int secPara = 385;
+	paiPubKey pk0;
+	paiPriKey sk0;
+	int factor = 3;
+
+	Big p, a, b, xG, yG, n, BMod;
+	Big d, d0, d1;
+	ECn PK, PK0, PK1;
+	ecdsaSysPara sysPara;
+	int la = 256;
+	int msgByteLen;
+	ecdsaSig sigma, tmpsig;
+	nizkDLX st0, st1;
+	nizkDLW wi0, wi1;
+	nizkDLPi pi0, pi1;
+	Big cm0;
+	Big d0cipher, cipher, d0plain;
+	Big y0, tmpy0;
+	pSigma2 psig;
+	Big cpart, cinvk;
+	ECn R0, Rg, Rk, K;
+	Big r0, rs;
+
+
+	// secp256k1 recommended by NIST - 256 bits security level
+	BYTE *ecp = (BYTE *) "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F";
+	BYTE *eca = (BYTE *) "0000000000000000000000000000000000000000000000000000000000000000";
+	BYTE *ecb = (BYTE *) "0000000000000000000000000000000000000000000000000000000000000007";
+	BYTE *ecxG = (BYTE *) "79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798";
+	BYTE *ecyG = (BYTE *) "483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8";
+	BYTE *ecn = (BYTE *) "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141";
+
+	mip->IOBASE = 16;
+	char* msg = (char *) "B09A20654ADEFAA07C80512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A2D09A20654ADEFAA07C80512BCBB42C07D47349D2153B70C4E5D7FDFCBFA36EA1A85841B9E46E09A5";
+	BYTE msgBYTE[MAXCHARSIZE];
+	byteReset(msgBYTE, MAXCHARSIZE);
+	charToByte(msg, strlen(msg), msgBYTE, msgByteLen);
+
+	p = Big((char *)ecp);
+	a = Big((char *)eca);
+	b = Big((char *)ecb);
+	xG = Big((char *)ecxG);
+	yG = Big((char *)ecyG);
+	n = Big((char *)ecn);
+	ecdsaSetup(mip, sysPara, la, p, a, b, xG, yG, n);
+
+	ecdsaKGen(mip, sysPara, factor, d0, PK0);
+	ecdsaKGen(mip, sysPara, factor, d1, PK1);
+	PK = PK0;
+	PK *= d1;
+
+
+	paillKGen(mip, secPara, pk0, sk0);
+	paillEncMont(mip, pk0, d0, d0cipher);
+	modulo(sysPara.p);
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		P0Comit(sysPara, st0, wi0, pi0, cm0);
+		P1Comit(sysPara, st1, wi1, pi1);
+		P1Sign(sysPara, cm0, st0, pi0, d1, msgBYTE, msgByteLen, wi1, pk0, d0cipher, cipher);
+		P0Sign(sysPara, st1, wi0, sk0, pk0, cipher, sigma);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of Sign2 = " << exe_time / num << " ms" << endl;
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		P0Comit(sysPara, st0, wi0, pi0, cm0);
+		P1Comit(sysPara, st1, wi1, pi1);
+		P1SignOffline(sysPara, cm0, st0, pi0, d1, wi1, pk0, d0cipher, cpart, cinvk);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of Sign2Offline = " << exe_time / num << " ms" << endl;
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		P1SignOnline(sysPara, st0, pi0, msgBYTE, msgByteLen, pk0, cpart, cinvk, cipher);
+		P0Sign(sysPara, st1, wi0, sk0, pk0, cipher, sigma);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of Sign2Online = " << exe_time / num << " ms" << endl;
+
+	if (ecdsaVerf(mip, sysPara, PK, msgBYTE, msgByteLen, sigma))
+	{
+		cout << "Valid!" << endl;
+	}
+	else
+	{
+		cout << "sigma.r = " << sigma.r << endl;
+		cout << "sigma.s = " << sigma.s << endl;
+		cout << "Sign2 is invalid!" << endl;
+	}
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		ecdsaVerf(mip, sysPara, PK, msgBYTE, msgByteLen, sigma);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of ecdsaVerf = " << exe_time / num << " ms" << endl;
+
+	K = st1.Y;
+	K *= wi0.w;
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		y0 = rand(sysPara.n);
+		pSignECDSA(sysPara, sigma, msgBYTE, msgByteLen, K, PK, y0, psig);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of pSign2ECDSA = " << exe_time / num << " ms" << endl;
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		pVerfECDSA(sysPara, PK, msgBYTE, msgByteLen, psig);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of pVerfECDSA = " << exe_time / num << " ms" << endl;
+
+	if (pVerfECDSA(sysPara, PK, msgBYTE, msgByteLen, psig))
+		cout << "Pre-signature is valid!" << endl;
+	else
+		cout << "Invalid!" << endl;
+	
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		pSignECDSAOffline(sysPara, K, PK, y0, R0, Rg, Rk, r0, rs, psig);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of pSignECDSAOffline = " << exe_time / num << " ms" << endl;
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		pSignECDSAOnline(sysPara, R0, Rg,  Rk, K,  sigma,  r0,  rs,  y0, psig);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of pSignECDSAOnline = " << exe_time / num << " ms" << endl;
+	if (pVerfECDSA(sysPara, PK, msgBYTE, msgByteLen, psig))
+		cout << "Pre-signature is valid!" << endl;
+	else
+		cout << "Invalid!" << endl;
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		adaptECDSA(sysPara, psig, y0, tmpsig);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of adaptECDSA = " << exe_time / num << " ms" << endl;
+
+	adaptECDSA(sysPara, psig, y0, tmpsig);
+	if (ecdsaVerf(mip, sysPara, PK, msgBYTE, msgByteLen, tmpsig))
+	{
+		cout << "Adapt correctly!" << endl;
+	}
+	else
+		cout << "Incorrect!" << endl;
+
+	QueryPerformanceFrequency(&freq);// obtain clock frequency 
+	exe_time = 0;
+	for (int k = 0; k < num; k++)
+	{
+		QueryPerformanceCounter(&start_t);
+		extECDSA(sysPara, psig, sigma, tmpy0);
+		QueryPerformanceCounter(&stop_t);
+		exe_time += 1e3*(stop_t.QuadPart - start_t.QuadPart) / freq.QuadPart;
+	}
+	cout << "The performance of extECDSA = " << exe_time / num << " ms" << endl;
+
+	if (tmpy0 == y0)
+		cout << "Extract correctly!" << endl;
+	else
+		cout << "Incorrect!" << endl;
+
+}
+
 void bls2Sign_test()
 {	
 	
@@ -374,7 +597,7 @@ void bls2Sign_test()
 	G2 P0, P1, P;
 	int msgByteLen;
 	blsSysPara sysPara;
-	int num = 100;
+	int num = 1000;
 	G1 sig0, sig1, sig, tmpsig;
 	G1 y0, tmpy0;
 	pSigma1 psig;
@@ -514,7 +737,7 @@ void schnorr2Sign_test()
 	LARGE_INTEGER start_t, stop_t;
 	double exe_time = 0;
 
-	int num = 100;
+	int num = 1000;
 
 	Big p, a, b, xG, yG, n, BMod;
 	Big d, d0, d1;
