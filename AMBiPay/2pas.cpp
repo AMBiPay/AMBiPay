@@ -96,7 +96,6 @@ Return: st0: statement of nizkDLX type
 	    pi0: proof of nizkDLPi type
 		cm0: commitment of st and pi
 ************************************/
-
 void P0Comit(ecdsaSysPara sysPara, nizkDLX &st0, nizkDLW &wi0, nizkDLPi &pi0, Big &cm0)
 {
 	Big Tmpx, Tmpy;
@@ -534,12 +533,28 @@ int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma ps
 
 }
 
+/************************************
+Description: the adpation algorithm in 2-party ECDSA adaptor signature scheme
+Input: sysPara: public system parameter	  
+	   psig: the pre-signature
+	   y0: the witness
+
+Return:  sig: the signature 
+************************************/
 void adaptECDSA(ecdsaSysPara sysPara, pSigma psig, Big y0, ecdsaSig &sig)
 {
 	sig.r = psig.r;
 	sig.s = modmult(psig.ws, y0, sysPara.n);
 }
 
+/************************************
+Description: the extracting algorithm in 2-party ECDSA adaptor signature scheme
+Input: sysPara: public system parameter
+	   psig: the pre-signature
+	   sig: the signature   
+
+Return:  y0: the witness
+************************************/
 void extECDSA(ecdsaSysPara sysPara, pSigma psig, ecdsaSig sig, Big &y0)
 {
 	Big invs;
@@ -548,7 +563,18 @@ void extECDSA(ecdsaSysPara sysPara, pSigma psig, ecdsaSig sig, Big &y0)
 	y0 = modmult(sig.s, invs, sysPara.n);
 }
 
+/************************************
+Description: the pre-signing algorithm of 2-party ECDSA adaptor signature scheme [2]
+Input: sysPara: public system parameter
+	   sigma: the 2-party signature
+	   msg: message
+	   msgByteLen: the byte length of message
+	   K: the committed point in ECDSA
+	   P: the public key
+	   y0: witness of nizkDLPi type
 
+Return:  psig: the final pre-signature
+************************************/
 void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen, ECn K, ECn P, Big y0, pSigma2 &psig)
 {
 	Big invy0, invs, e, tmph, tmpr;
@@ -626,6 +652,20 @@ void pSignECDSA(ecdsaSysPara sysPara, ecdsaSig sigma, BYTE *msg, int msgByteLen,
 	psig.zs = (rs + sysPara.n - tmph) % sysPara.n;
 }
 
+/************************************
+Description: the offline pre-signing algorithm of 2-party ECDSA adaptor signature scheme [12]
+Input: sysPara: public system parameter	   
+	   K: committed point decided by both parties
+	   P: the public key
+	   y0: witness of nizkDLPi type	   
+
+Return: R0: committed point in the proof
+		Rg: committed point in the proof
+		Rk: committed point in the proof
+		r0: random value
+		rs: random value
+		psig: the final pre-signature
+************************************/
 void pSignECDSAOffline(ecdsaSysPara sysPara, ECn K, ECn P, Big y0, ECn &R0, ECn &Rg, ECn &Rk, Big &r0, Big &rs, pSigma2 &psig)
 {
 	Big e, tmph, tmpr;
@@ -646,9 +686,15 @@ void pSignECDSAOffline(ecdsaSysPara sysPara, ECn K, ECn P, Big y0, ECn &R0, ECn 
 }
 
 /************************************
-Description: the online pre-signing algorithm of 2-party ECDSA adaptor signature scheme
+Description: the online pre-signing algorithm of 2-party ECDSA adaptor signature scheme [12]
 Input: sysPara: public system parameter
+	   R0: committed point in the proof output by pSignECDSAOffline
+	   Rg: committed point in the proof output by pSignECDSAOffline
+	   Rk: committed point in the proof output by pSignECDSAOffline
+	   K: committed point decided by both parties
 	   simga: 2-party signature
+	   r0: random value output by pSignECDSAOffline
+	   rs: random value output by pSignECDSAOffline
 	   y0: witness of nizkDLPi type
 
 Return:  psig: the final pre-signature
@@ -696,7 +742,17 @@ void pSignECDSAOnline(ecdsaSysPara sysPara, ECn R0, ECn Rg, ECn Rk, ECn K, ecdsa
 
 }
 
+/************************************
+Description: the verification algorithm for pre-signatures in 2-party ECDSA adaptor signature scheme [12]
+Input: sysPara: public system parameter
+	   P: public key
+	   msg: message
+	   msgByteLen: the byte length of message
+	   psig: the pre-signature
 
+Return:  1: the pre-signature is valid
+		 0: invalid otherwise
+************************************/
 int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma2 psig)
 {
 	Big tmpe0, tmpx, tmpy;
@@ -770,18 +826,20 @@ int pVerfECDSA(ecdsaSysPara sysPara, ECn P, BYTE *msg, int msgByteLen, pSigma2 p
 
 }
 
-
+/************************************Description: the adpation algorithm in 2-party ECDSA adaptor signature schemeInput: sysPara: public system parameter	   psig: the pre-signature	   y0: the witnessReturn:  sig: the signature************************************/
 void adaptECDSA(ecdsaSysPara sysPara, pSigma2 psig, Big y0, ecdsaSig &sig)
 {
 	sig.r = psig.r;
 	sig.s = (psig.ws - y0 + sysPara.n) % sysPara.n;
 }
 
+/************************************Description: the extracting algorithm in 2-party ECDSA adaptor signature schemeInput: sysPara: public system parameter	   psig: the pre-signature	   sig: the signatureReturn:  y0: the witness************************************/
 void extECDSA(ecdsaSysPara sysPara, pSigma2 psig, ecdsaSig sig, Big &y0)
 {
 
 	y0 = (psig.ws - sig.s) % sysPara.n;
 }
+
 
 void signSchnorr(ecdsaSysPara sysPara, ECn R, Big r, Big d, BYTE *msg, int msgByteLen, schnorrSig &sig)
 {
